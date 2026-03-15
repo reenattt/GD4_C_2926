@@ -1,25 +1,24 @@
 'use client'
 
-// Import React dan hook useState untuk mengelola state komponen
 import React, { useState, useEffect } from 'react';
 
-// Import komponen GameBoard dan ScoreBoard
 import GameBoard from '../components/GameBoard';
 import ScoreBoard from '../components/ScoreBoard';
 
-// Import react-icons
 import { GiCardJoker } from 'react-icons/gi';
-import { FaAppleAlt, FaLemon, FaHeart, FaStar } from 'react-icons/fa';
+import { FaAppleAlt, FaLemon, FaHeart, FaStar, FaGem, FaBolt, FaLeaf, FaSun } from 'react-icons/fa';
 
-// Daftar icon yang digunakan sebagai isi kartu (4 pasang = 8 kartu)
 const ICONS = [
   { icon: FaAppleAlt, color: "#ef4444" },
   { icon: FaLemon, color: "#eab308" },
   { icon: FaHeart, color: "#ec4899" },
   { icon: FaStar, color: "#f97316" },
+  { icon: FaGem, color: "#a855f7" },
+  { icon: FaBolt, color: "#facc15" },
+  { icon: FaLeaf, color: "#22c55e" },
+  { icon: FaSun, color: "#fb923c" },
 ];
 
-// Fungsi untuk mengacak urutan array menggunakan algoritma Fisher-Yates
 const shuffleArray = (array) => {
   const shuffled = [...array];
   for (let i = shuffled.length - 1; i > 0; i--) {
@@ -29,36 +28,49 @@ const shuffleArray = (array) => {
   return shuffled;
 };
 
-// Fungsi untuk membuat set kartu baru
-// Menggandakan setiap icon (untuk membuat pasangan), lalu mengacak urutannya
-const createCards = () => {
-  const paired = ICONS.flatMap((item, index) => [
+const createCards = (pairs) => {
+  const selectedIcons = ICONS.slice(0, pairs);
+
+  const paired = selectedIcons.flatMap((item, index) => [
     { id: index * 2, icon: item.icon, color: item.color, pairId: index },
     { id: index * 2 + 1, icon: item.icon, color: item.color, pairId: index },
   ]);
+
   return shuffleArray(paired);
 };
 
 export default function Home() {
 
-  // State 'cards' menyimpan array kartu yang sudah diacak
+  const [difficulty, setDifficulty] = useState("easy");
+  const [pairs, setPairs] = useState(4);
+
   const [cards, setCards] = useState([]);
-
-  // State 'flippedCards' menyimpan id kartu yang sedang terbuka (maks 2)
   const [flippedCards, setFlippedCards] = useState([]);
-
-  // State 'matchedCards' menyimpan id kartu yang sudah berhasil dicocokkan
   const [matchedCards, setMatchedCards] = useState([]);
 
-  // State 'moves' menyimpan jumlah percobaan yang dilakukan pemain
   const [moves, setMoves] = useState(0);
 
-  // useEffect untuk inisialisasi kartu saat komponen pertama kali dirender
-  useEffect(() => {
-    setCards(createCards());
-  }, []);
+  const [time, setTime] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
 
-  // useEffect untuk mengecek kecocokan setiap kali 2 kartu terbuka
+  useEffect(() => {
+    resetGame();
+  }, [pairs]);
+
+  useEffect(() => {
+
+    let timer;
+
+    if (isPlaying) {
+      timer = setInterval(() => {
+        setTime(prev => prev + 1);
+      }, 1000);
+    }
+
+    return () => clearInterval(timer);
+
+  }, [isPlaying]);
+
   useEffect(() => {
 
     if (flippedCards.length === 2) {
@@ -68,28 +80,36 @@ export default function Home() {
       const firstCard = cards.find(c => c.id === firstId);
       const secondCard = cards.find(c => c.id === secondId);
 
-      // Tambah jumlah percobaan
       setMoves(prev => prev + 1);
 
-      // Jika cocok
       if (firstCard.pairId === secondCard.pairId) {
+
         setMatchedCards(prev => [...prev, firstId, secondId]);
         setFlippedCards([]);
+
       } else {
 
-        // Jika tidak cocok, tutup kembali
         const timer = setTimeout(() => {
           setFlippedCards([]);
         }, 800);
 
         return () => clearTimeout(timer);
+
       }
+
     }
 
   }, [flippedCards, cards]);
 
-  // Fungsi untuk membalik kartu
+  useEffect(() => {
+    if (matchedCards.length === pairs * 2) {
+      setIsPlaying(false);
+    }
+  }, [matchedCards]);
+
   const handleCardFlip = (id) => {
+
+    if (!isPlaying) setIsPlaying(true);
 
     if (flippedCards.length < 2 && !flippedCards.includes(id)) {
       setFlippedCards(prev => [...prev, id]);
@@ -97,34 +117,75 @@ export default function Home() {
 
   };
 
-  // Fungsi reset game
   const resetGame = () => {
-    setCards(createCards());
+    setCards(createCards(pairs));
     setFlippedCards([]);
     setMatchedCards([]);
     setMoves(0);
+    setTime(0);
+    setIsPlaying(false);
+  };
+
+  const changeDifficulty = (mode) => {
+
+    setDifficulty(mode);
+
+    if (mode === "easy") setPairs(4);
+    if (mode === "medium") setPairs(6);
+    if (mode === "hard") setPairs(8);
+
+  };
+
+  const formatTime = (seconds) => {
+
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+
+    return `${mins}:${secs.toString().padStart(2,'0')}`;
+
   };
 
   return (
 
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-800 p-4">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-indigo-950 via-purple-900 to-pink-900 p-6">
 
-      {/* Judul */}
-      <h1 className="text-4xl font-bold mb-6 text-white drop-shadow-lg flex items-center gap-3">
-        <GiCardJoker className="text-yellow-300 text-4xl" />
+      <h1 className="text-4xl font-bold mb-4 text-white flex items-center gap-3">
+        <GiCardJoker className="text-yellow-400" />
         Memory Card
       </h1>
 
-      {/* Score */}
+      {/* Difficulty */}
+      <div className="flex gap-3 mb-6">
+
+        <button
+          onClick={() => changeDifficulty("easy")}
+          className={`px-4 py-1 rounded-full ${difficulty==="easy" ? "bg-yellow-400 text-black" : "bg-white/20 text-white"}`}>
+          Easy
+        </button>
+
+        <button
+          onClick={() => changeDifficulty("medium")}
+          className={`px-4 py-1 rounded-full ${difficulty==="medium" ? "bg-yellow-400 text-black" : "bg-white/20 text-white"}`}>
+          Medium
+        </button>
+
+        <button
+          onClick={() => changeDifficulty("hard")}
+          className={`px-4 py-1 rounded-full ${difficulty==="hard" ? "bg-yellow-400 text-black" : "bg-white/20 text-white"}`}>
+          Hard
+        </button>
+
+      </div>
+
       <ScoreBoard
         moves={moves}
         matchedCount={matchedCards.length / 2}
-        totalPairs={ICONS.length}
+        totalPairs={pairs}
+        time={formatTime(time)}
         onReset={resetGame}
       />
 
-      {/* Game board */}
-      <div className="bg-white/10 backdrop-blur-sm p-6 rounded-2xl shadow-2xl">
+      <div className="bg-white/10 backdrop-blur-md p-6 rounded-2xl shadow-2xl">
 
         <GameBoard
           cards={cards}
@@ -138,4 +199,5 @@ export default function Home() {
     </div>
 
   );
+
 }
