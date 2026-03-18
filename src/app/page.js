@@ -147,13 +147,13 @@ export default function Home() {
 
   return (
 
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-indigo-950 via-purple-900 to-pink-900 p-6">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-blue-900 via-indigo-800 to-cyan-600 p-6">
 
       <h1 className="text-4xl font-bold mb-4 text-white flex items-center gap-3">
         <GiCardJoker className="text-yellow-400" />
         Memory Card
       </h1>
-
+ 
       {/* Difficulty */}
       <div className="flex gap-3 mb-6">
 
