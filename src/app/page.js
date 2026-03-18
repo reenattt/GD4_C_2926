@@ -147,7 +147,7 @@ export default function Home() {
 
   return (
 
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-green-900 via-emerald-700 to-lime-500 p-6">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-blue-900 via-indigo-800 to-cyan-600 p-6">
 
       <h1 className="text-4xl font-bold mb-4 text-white flex items-center gap-3">
         <GiCardJoker className="text-yellow-400" />
